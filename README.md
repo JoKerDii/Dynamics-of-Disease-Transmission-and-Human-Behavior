@@ -2,6 +2,8 @@
 
 Team Members: Xinyun Stacy Li, Yujie Zhang, Di Zhen
 
+[Project Notebook](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/project_notebook.ipynb)
+
 ## Project Overview
 
 COVID-19 has caused a global impact since its outbreak in 2019. Various of efforts have been spent to predict and prevent the transmission of the virus. Some conducted time-series predicting of COVID-19 cases and deaths based on daily confirmed cases and deaths using deep neural network [1]. Others also incorporated features indicating human interactions, human mobility, and socioeconomic compositions of countries to make the prediction [2]. Here in this project, we explored and examined the effectiveness of predicting COVID-19 cases using Google trends. Given its potentially sensitive and fast reaction, Google trend pattern could provide important signals for the following changes in the number of COVID-19 cases and deaths.
@@ -51,6 +53,8 @@ LSTM is specifically designed for sequence data. It reads one time step of the s
 ### Design
 
 We used ReLU activation function on each hidden layer, Adam optimizer with 0.001 learning rate, and Mean Square Error (MSE) loss. To make the models comparable, we only used California dataset. We trained models with 80% training data, and validated the model with 20% validation data. After training the models, we visualized training loss and validation loss at each epoch to see clear decreasing trends. Then we used the trained models to make predictions and visualized the prediction performance overlapped with the true cases.
+
+![modelPerform](./img/modelPerform.png)
 
 ## Feature Importance
 
