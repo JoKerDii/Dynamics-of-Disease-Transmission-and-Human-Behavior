@@ -2,7 +2,8 @@
 
 Team Members: Xinyun Stacy Li, Yujie Zhang, Di Zhen
 
-[Project Notebook](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/project_notebook.ipynb)
+[Time Series Analysis](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/time_series_analysis.ipynb); [Improved Modeing](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/improved_modeling.ipynb); [Project Notebook (old)](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/project_notebook.ipynb).
+
 
 ## Project Overview
 
@@ -14,7 +15,7 @@ We have two goals to achieve:
 2. Recognize the complications of COVID-19 through Google search trends. This secondary goal can be achieved by interpreting the model for the first goal and identify important features.
 3. Test the generalizability of the model (cross-states, cross-diseases)
 
-We propose applying neural network models including simple RNN, LSTM, and bidirectional LSTM to predict the confirmed COVID-19 cases for the following 5 days based on the Google trend data within 2 weeks. We focus on predictions for three states including California, New York, and Massachusetts, which are metropolitan representatives of the eastern and western U.S. The large populations in these states provide a clear picture of the transmission pattern of the virus over time. Moreover, we are also interested in the most predictive trends for these states and whether the model built from one state could generalize to the other two states.
+We propose applying neural network models including simple RNN, LSTM, and bidirectional LSTM to predict the confirmed COVID-19 cases for the following 7 days based on the Google trend data within 2 weeks. We focus on predictions for three states including California, New York, and Massachusetts, which are metropolitan representatives of the eastern and western U.S. The large populations in these states provide a clear picture of the transmission pattern of the virus over time. Moreover, we are also interested in the most predictive trends for these states and whether the model built from one state could generalize to the other two states.
 
 ## Data Description
 
@@ -24,23 +25,55 @@ We are working with a set of time-series data spanned nearly two years where eac
 
 We calculated Spearman correlation between features and cases to have an idea of which features are mostly correlated with or even potentially predictive to the number of COVID-19 cases. We found gt features are highly correlated with each other. We then visualized the correlations between the google trend features by heatmap. We found Bronchitis and Cough appears to be highly correlated (corr>0.95).
 
-Figure 1 displays a correlation heatmap, which represents correlation between 35 features including a pair of highly correlated features which are gt2_Bronchitis and gt2_Cough. Figure 2 displays a trend plot showing the number of COVID-19 cases varying with time in three states (California, New York, and Massachusetts). Figure 3 displays a trend plot showing the number of COVID-19 cases, deaths, and hospitalizations varying with time in New York. Here we choose New York as an example. The trend of COVID-19 cases/deaths/hospitalizations of the other two states has similar shape.
+**Figure 1** displays a correlation heatmap, which represents correlation between 35 features including a pair of highly correlated features which are gt2_Bronchitis and gt2_Cough. **Figure 2** displays a trend plot showing the number of COVID-19 cases varying with time in three states (California, New York, and Massachusetts). **Figure 3** displays a trend plot showing the number of COVID-19 cases, deaths, and hospitalizations varying with time in New York. Here we choose New York as an example. The trend of COVID-19 cases/deaths/hospitalizations of the other two states has similar shape.
+
+**Figure 1**
 
 ![heatmap1](./img/heatmap1.png)
 
+**Figure 2**
+
 ![three](./img/three.png)
+
+**Figure 3**
 
 ![newyork](./img/newyork.png)
 
 ## Data Cleaning and Preprocessing
 
-We dropped features with more than roughly 20% (100) missing values. After that, we lost 88 features, which wasn't a huge deduction compared to the total number of features we had. We observed that most of NAs are at the beginning of the padamic, so we believe the number of cases/deaths are 0 or close to 0. Therefore, we decided to replace nan with 0 in cases/deaths. We also replaced negative number of cases with 0s, because they are likely to be erroneous data.
+We prepared feature table containing only Google Trends. We dropped features with more than roughly 20% (100) missing values. After that, we dropped 88 features, which wasn't a huge deduction compared to the total number of features we had. For the remaining features with missing values, we imputed the remaining missing value in all features by using KNN imputer. For the missing cases at the beginning of the pandemic, we believe the number of cases/deaths are 0 or close to 0. Therefore, we decided to replace nan with 0 in cases/deaths. We also flipped the sign of negative number of cases, because they are likely to be erroneous data. We removed 5 days in the end of the dataset because of NA cases.
 
-We prepared feature table containing only Google Trends. We noticed that the confirmed case data was very ridged. Thus, in order to help the model learn and predict the true trend rather than being distracted by those jagged lines, we smoothed the outcome data using rolling mean of new cases with a window size of 5. By using the population size from [2020 census website](https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-total.html) [4], we standardized the cases so the unit becomes cases/1e5 people. We also imputed the remaining missing value in all features by using KNN imputer.  As a part of feature selection step, we dropped highly correlated features identified during EDA among all three datasets to reduce data dimensionality, so as to reduce computation cost. Since the gt features are in varies scales, we standardized the gt features by standard scaler.
+We noticed that the confirmed case data was very ridged. Thus, we smoothed the outcome data using rolling mean of new cases with a window size of 5, in order to help the model learn and predict the true trend rather than being distracted by those jagged lines. We also take the log transformation of the cases to make the time series more stationary. For building ARIMA model specifically, we remove the cubic trend from the log cases in order to ensure the stationarity of the time series.
 
-In order to fit data into the RNN models, we first transformed two dimensional time-series data of shape [samples, features] into three dimensional structure of a shape [samples, time steps, features]. Specifically, we specified a time step of 14 days, then moved a sliding window of size [time steps, features] on the 2D dataset to capture the information for each time step and stacked them together to get a 3D data. Essentially, we add one dimension of time steps to the original data. We defined the features as our predictors X, and the final 5-day COVID-19 cases for each 14 day period as our target Y, meaning that we used the features from every 14 days to predict the cases of the last 5 days.
+As a part of feature selection step, we dropped highly correlated features identified during EDA among all three datasets to reduce data dimensionality, so as to reduce computation cost. Since the gt features are in varies scales, we standardized the gt features by standard scaler.
+
+In order to fit data into the RNN models, we first transformed two dimensional time-series data of shape [samples, features] into three dimensional structure of a shape [samples, time steps, features]. Specifically, we specified a time step of 14 days, then moved a sliding window of size [time steps, features] on the 2D dataset to capture the information for each time step and stacked them together to get a 3D data. Essentially, we add one dimension of time steps to the original data. We defined the features as our predictors X, and the final 7-day COVID-19 cases for each 14 day period as our target Y, meaning that we used the features from every 14 days to predict the cases of the last 7 days.
+
+**Figure 4**: COVID-19 Cases after taking the rolling average with window size of 5, and log transformation.
+
+![log-cases](./img/log_cases.png)
 
 ## Model
+
+### Baseline Model - ARIMA
+
+We did one more step to make sure the stationarity specifically for building a ARIMA model, which is to remove the cubic trend. Then we look at the ACF and PACF of the residuals (log case - cubic regression line) to determine the order of AR(p) and MA(q). 
+
+We use the ARIMA package to fit models to the data. Estimation goal: given an order $p, q$, find estimates of $\phi$ and $\theta$. The general form for an AR model of order $p$:
+$$
+X_t = \phi_1 X_{t-1} + \phi_2 X_{t-2} \dots + \phi_p X_{t - p} + \varepsilon_t
+$$
+And the form for an MA model of order $q$:
+$$
+X_t = \varepsilon_t + \theta_1 \varepsilon_{t-1} + \theta_2 \varepsilon_{t-2} \dots + \theta_q \varepsilon_{t-1}
+$$
+where $ɛ_t$ is mean zero white noise that's uncorrelated with any lagged or future values. 
+
+With estimates of each $\theta$ and $\phi$ term, we predict one step ahead. 
+$$
+\hat{X}_{t + 1} = \hat{\phi}_1 X_{t} + \hat{\phi}_2 X_{t-1} \dots + \hat{\phi}_p X_{t - p + 1} + \hat{\theta}_1 \varepsilon_{t} + \hat{\theta}_2 \varepsilon_{t-1} \dots + \hat{\theta}_q \varepsilon_{t-q + 1}
+$$
+To form long-range forecasts, we can just plug in our estimate $\hat{X}_{t + 1}$ in place of $X_{t + 1}$ at every future value, and so on for other future estimates.
 
 ### Baseline Model - Simple RNN
 
@@ -48,17 +81,39 @@ As a baseline, we built a simple Recurrent Neural Networks (RNNs) model with a s
 
 ### Advanced Models - LSTM & BiLSTM
 
-LSTM is specifically designed for sequence data. It reads one time step of the sequence at a time and builds up an internal state representation that can be used as a learned context for making a prediction. Bidirectional LSTM can be beneficial to allow the LSTM model to learn the input sequence both forward and backwards and concatenate both interpretations. Therefore, we first designed a single layer LSTM model with 100 units, and then tried a bidirectional LSTM model with a single LSTM layer wrapped by a bidirectional wrapper layer.
+LSTM is specifically designed for sequence data. It reads one time step of the sequence at a time and builds up an internal state representation that can be used as a learned context for making a prediction. Bidirectional LSTM can be beneficial to allow the LSTM model to learn the input sequence both forward and backwards and concatenate both interpretations. Therefore, we first designed a single layer LSTM model with 200 units, and then tried a bidirectional LSTM model with a single LSTM layer wrapped by a bidirectional wrapper layer.
 
-### Design
+### Model Design
 
-We used ReLU activation function on each hidden layer, Adam optimizer with 0.001 learning rate, and Mean Square Error (MSE) loss. To make the models comparable, we only used California dataset. We trained models with 80% training data, and validated the model with 20% validation data. After training the models, we visualized training loss and validation loss at each epoch to see clear decreasing trends. Then we used the trained models to make predictions and visualized the prediction performance overlapped with the true cases.
+We used ReLU activation function on each hidden layer, Adam optimizer with 0.001 learning rate, and Mean Square Error (MSE) loss. We used the trained models to make predictions and visualized the prediction performance overlapped with the true cases on the log scale.
+
+## Results
+
+Model performance on predicting COVID-19 in California.
+
+| Models                                | MSE    |
+| ------------------------------------- | ------ |
+| 1-day ARIMA (cubic trend removed)     | 0.1949 |
+| 1-week ARIMA (cubic trend removed)    | 0.1621 |
+| 1-week Simple RNN (100 units)         | 2.0706 |
+| 1-week LSTM (200 units)               | 1.2585 |
+| 1-week Bidirectional LSTM (200 units) | 0.2147 |
+
+**Figure 5**: True log cases vs ARIMA predicted log cases one day ahead (after removing cubic trend)
+
+![day-arima](./img/day-arima.png)
+
+**Figure 6**: True log cases vs ARIMA predicted log cases one week ahead (after removing cubic trend)
+
+![weekly-arima](./img/weekly-arima.png)
+
+**Figure 7**: True log cases vs BiLSTM predicted log cases:
 
 ![modelPerform](./img/modelPerform.png)
 
 ## Feature Importance
 
-We calculated feature importance measured by Mean Absolute Error (MAE) through shuffling features on at a time in LSTM models. 
+We calculated feature importance measured by Mean Absolute Error (MSE) through shuffling features on at a time in bidirectional LSTM models. 
 
 ![feature_imp](./img/feature_imp.png)
 
@@ -69,7 +124,7 @@ We calculated feature importance measured by Mean Absolute Error (MAE) through s
 
 ## Results and Discussion
 
-We successfully trained LSTM and BiLSTM models on CA, MA, NY datasets, and achieved good performance on predicting 5-day COVID-19 confirmed cases based on 14-day gt features. We also demonstrated that they can provide better results than standard RNNs. However, the models perform poorly on the end. One reason is that the data collection date ends at a period where cases number soars to an unprecedented level. This sudden surge also explains the poor models' performance on New York and Massachusetts because New York and Massachusetts had a much more drastic lift on cases number than California.
+We successfully trained LSTM and BiLSTM models on CA, MA, NY datasets, and achieved good performance on predicting 7-day COVID-19 confirmed cases based on 14-day gt features. We also demonstrated that they can provide better results than standard RNNs. However, the models perform poorly on the end. One reason is that the data collection date ends at a period where cases number soars to an unprecedented level. This sudden surge also explains the poor models' performance on New York and Massachusetts because New York and Massachusetts had a much more drastic lift on cases number than California.
 
 We show that the model built from one state could hardly generalize to the other two states by cross predicting cases on all of the three state datasets using state-specific BiLSTM models. This could be due to the fact that there are different characteristics among three states that contribute to the case trend. We then digged deeper into the features by identifying feature importance.
 
