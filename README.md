@@ -2,18 +2,17 @@
 
 Team Members: Xinyun Stacy Li, Yujie Zhang, Di Zhen
 
-[Time Series Analysis](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/time_series_analysis.ipynb); [Improved Modeing](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/improved_modeling.ipynb); [Project Notebook (old)](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/project_notebook.ipynb).
+[Exploratory Data Analysis](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/exploratory_data_analysis.ipynb); [Time Series Analysis](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/time_series_analysis.ipynb); [Improved Modeing](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/improved_modeling.ipynb); [Project Notebook (old)](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/project_notebook.ipynb).
 
 
 ## Project Overview
 
 COVID-19 has caused a global impact since its outbreak in 2019. Various of efforts have been spent to predict and prevent the transmission of the virus. Some conducted time-series predicting of COVID-19 cases and deaths based on daily confirmed cases and deaths using deep neural network [1]. Others also incorporated features indicating human interactions, human mobility, and socioeconomic compositions of countries to make the prediction [2]. Here in this project, we explored and examined the effectiveness of predicting COVID-19 cases using Google trends. Given its potentially sensitive and fast reaction, Google trend pattern could provide important signals for the following changes in the number of COVID-19 cases and deaths.
 
-We have two goals to achieve:
+There are two main goals: 
 
-1. Use the Google search activity trends data within a certain window to predict the number of COVID-19 cases in the next few days.
-2. Recognize the complications of COVID-19 through Google search trends. This secondary goal can be achieved by interpreting the model for the first goal and identify important features.
-3. Test the generalizability of the model (cross-states, cross-diseases)
+1) Assess the correlation between the terms searched by the public in Google and the number of COVID-19 cases; 
+2) Build a recurrent neural network based model to predict the number of COVID-19 cases in the future based on Google Trends Data.
 
 We propose applying neural network models including simple RNN, LSTM, and bidirectional LSTM to predict the confirmed COVID-19 cases for the following 7 days based on the Google trend data within 2 weeks. We focus on predictions for three states including California, New York, and Massachusetts, which are metropolitan representatives of the eastern and western U.S. The large populations in these states provide a clear picture of the transmission pattern of the virus over time. Moreover, we are also interested in the most predictive trends for these states and whether the model built from one state could generalize to the other two states.
 
@@ -23,19 +22,23 @@ We are working with a set of time-series data spanned nearly two years where eac
 
 ## Exploratory Data Analysis (EDA)
 
-We calculated Spearman correlation between features and cases to have an idea of which features are mostly correlated with or even potentially predictive to the number of COVID-19 cases. We found gt features are highly correlated with each other. We then visualized the correlations between the google trend features by heatmap. We found Bronchitis and Cough appears to be highly correlated (corr>0.95).
+We calculated <u>Pearson correlation coefficients</u> between each keyword's standardized relative search volume and the number of cases to have an idea of which features are mostly correlated with or even potentially predictive to the number of COVID-19 cases. We also calculated <u>lag and lead Pearson correlation coefficients</u> from 14 days before the first case to 14 days after the last case. **Figure 1** shows features that are strongly and moderately correlated with the number of cases. We then visualized the correlations between these google trend features by heatmap (**Figure 2**). We found Bell's paisy and Facial nerve paralysis appears to be highly correlated (corr>0.95). 
 
-**Figure 1** displays a correlation heatmap, which represents correlation between 35 features including a pair of highly correlated features which are gt2_Bronchitis and gt2_Cough. **Figure 2** displays a trend plot showing the number of COVID-19 cases varying with time in three states (California, New York, and Massachusetts). **Figure 3** displays a trend plot showing the number of COVID-19 cases, deaths, and hospitalizations varying with time in New York. Here we choose New York as an example. The trend of COVID-19 cases/deaths/hospitalizations of the other two states has similar shape.
+**Figure 3** displays a trend plot showing the number of COVID-19 cases varying with time in three states (California, New York, and Massachusetts). **Figure 4** displays a trend plot showing the number of COVID-19 cases, deaths, and hospitalizations varying with time in New York. Here we choose New York as an example. The trend of COVID-19 cases/deaths/hospitalizations of the other two states has similar shape.
 
 **Figure 1**
 
-![heatmap1](./img/heatmap1.png)
+![pcorr_strong_moderate](./img/pcorr_strong_moderate.png)
 
 **Figure 2**
 
-![three](./img/three.png)
+![heatmap1](./img/selected_feature_corr.png)
 
 **Figure 3**
+
+![three](./img/three.png)
+
+**Figure 4**
 
 ![newyork](./img/newyork.png)
 
@@ -49,7 +52,7 @@ As a part of feature selection step, we dropped highly correlated features ident
 
 In order to fit data into the RNN models, we first transformed two dimensional time-series data of shape [samples, features] into three dimensional structure of a shape [samples, time steps, features]. Specifically, we specified a time step of 14 days, then moved a sliding window of size [time steps, features] on the 2D dataset to capture the information for each time step and stacked them together to get a 3D data. Essentially, we add one dimension of time steps to the original data. We defined the features as our predictors X, and the final 7-day COVID-19 cases for each 14 day period as our target Y, meaning that we used the features from every 14 days to predict the cases of the last 7 days.
 
-**Figure 4**: COVID-19 Cases after taking the rolling average with window size of 5, and log transformation.
+**Figure 5**: COVID-19 Cases after taking the rolling average with window size of 5, and log transformation.
 
 ![log-cases](./img/log_cases.png)
 
@@ -89,31 +92,38 @@ We used ReLU activation function on each hidden layer, Adam optimizer with 0.001
 
 ## Results
 
-Model performance on predicting COVID-19 in California.
+ARIMA model.
+
+| Models                             | MSE    |
+| ---------------------------------- | ------ |
+| 1-day ARIMA (cubic trend removed)  | 0.1949 |
+| 1-week ARIMA (cubic trend removed) | 0.1621 |
+
+RNN based Model performance on predicting COVID-19 in California.
 
 | Models                                | MSE    |
 | ------------------------------------- | ------ |
-| 1-day ARIMA (cubic trend removed)     | 0.1949 |
-| 1-week ARIMA (cubic trend removed)    | 0.1621 |
 | 1-week Simple RNN (100 units)         | 2.0706 |
 | 1-week LSTM (200 units)               | 1.2585 |
 | 1-week Bidirectional LSTM (200 units) | 0.2147 |
 
-**Figure 5**: True log cases vs ARIMA predicted log cases one day ahead (after removing cubic trend)
+**Figure 6**: True log cases vs ARIMA predicted log cases one day ahead (after removing cubic trend)
 
 ![day-arima](./img/day-arima.png)
 
-**Figure 6**: True log cases vs ARIMA predicted log cases one week ahead (after removing cubic trend)
+**Figure 7**: True log cases vs ARIMA predicted log cases one week ahead (after removing cubic trend)
 
 ![weekly-arima](./img/weekly-arima.png)
 
-**Figure 7**: True log cases vs BiLSTM predicted log cases:
+**Figure 8**: True log cases vs BiLSTM predicted log cases:
 
 ![modelPerform](./img/modelPerform.png)
 
 ## Feature Importance
 
 We calculated feature importance measured by Mean Absolute Error (MSE) through shuffling features on at a time in bidirectional LSTM models. 
+
+**Figure 9**
 
 ![feature_imp](./img/feature_imp.png)
 
