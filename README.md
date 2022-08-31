@@ -2,7 +2,7 @@
 
 Team Members: Xinyun Stacy Li, Yujie Zhang, Di Zhen
 
-[Exploratory Data Analysis](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/exploratory_data_analysis.ipynb); [Time Series Analysis](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/time_series_analysis.ipynb); [Improved Modeing](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/improved_modeling.ipynb); [Project Notebook (old)](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/project_notebook.ipynb).
+[Exploratory Data Analysis](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/exploratory_data_analysis.ipynb); [Time Series Analysis](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/time_series_analysis.ipynb); [Improved Modeling](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/improved_modeling.ipynb); [Project Notebook (old)](https://nbviewer.org/github/JoKerDii/Dynamics-of-Disease-Transmission-and-Human-Behavior/blob/main/project_notebook.ipynb).
 
 
 ## Project Overview
